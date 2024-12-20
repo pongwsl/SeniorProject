@@ -1,10 +1,11 @@
 # test2a.py
 # created by pongwsl on 20 dec 2024
 # lasted updated 20 dec 2024
-# update from test1.py, to optimize the MediaPipe.
+# update from test2a.py, to add def tipCoord(lm, i).
 # This code tested on python 3.9.13 on venv-metal.
-# To select Python Interpreter in VSCode: press [[cmd + shift + P]], type 'Python: Select Interpreter'
-# use "/Users/wasinlapthanaphat/Desktop/helloWorld/SeniorProject-backup/venv-metal/bin/python"
+# To select Python Interpreter in VSCode:
+# press cmd+shift+P, type 'Python: Select Interpreter'
+# use "/Library/Developer/CommandLineTools/usr/bin/python3"
 
 import cv2
 import mediapipe as mp
