@@ -1,4 +1,4 @@
-# test2.py
+# test2a.py
 # created by pongwsl on 20 dec 2024
 # lasted updated 20 dec 2024
 # update from test1.py, to optimize the MediaPipe.
