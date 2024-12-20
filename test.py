@@ -1,5 +1,6 @@
-# test.py
+# test1.py
 # created by pongwsl on 18 dec 2024
+# lasted updated 20 dec 2024
 # to test several libraries and to know which library should use on which python, venv.
 # This code tested on python 3.9.6 / 3.12.8
 # To select Python Interpreter in VSCode:
@@ -14,9 +15,21 @@ print('OpenCV version:', cv2.__version__)
 print('Mediapipe version:', mp.__version__)
 
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
+hands = mpHands.Hands(
+    static_image_mode=False,
+    max_num_hands=1,  # Limit to one hand for faster processing
+    min_detection_confidence=0.7,  # Increase confidence to reduce false positives
+    min_tracking_confidence=0.7    # Increase to improve tracking accuracy
+)
 mpDrawing = mp.solutions.drawing_utils
+
+# Set desired frame width and height
+frameWidth = 640
+frameHeight = 480
+
 camera = cv2.VideoCapture(0)
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, frameWidth)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, frameHeight)
 
 # Variables for FPS calculation
 prev_time = 0
