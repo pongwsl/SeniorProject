@@ -8,6 +8,22 @@ import cv2
 import mediapipe as mp
 import os
 import glob
+import math
+from tabulate import tabulate
+
+def print_normalized_landmarks(handLandmarks):
+    headers = ["Landmark", "x (normalized)", "y (normalized)", "z (normalized)"]
+    table = []
+    for idx, lm in enumerate(handLandmarks.landmark):
+        table.append([idx, f"{lm.x:.3f}", f"{lm.y:.3f}", f"{lm.z:.3f}"])
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+
+def print_world_landmarks(worldLandmarks):
+    headers = ["Landmark", "x (mm)", "y (mm)", "z (mm)"]
+    table = []
+    for idx, lm in enumerate(worldLandmarks.landmark):
+        table.append([idx, f"{lm.x * 1000:.3f}", f"{lm.y * 1000:.3f}", f"{lm.z * 1000:.3f}"])
+    print(tabulate(table, headers=headers, tablefmt="grid"))
 
 def main():
     # Path to the folder containing PNG images
@@ -21,11 +37,11 @@ def main():
     # Initialize MediaPipe Hands with world landmarks
     mpHands = mp.solutions.hands
     hands = mpHands.Hands(
-        static_image_mode = True,        # Since we're processing static images
-        max_num_hands = 2,               # Adjust as needed
-        min_detection_confidence = 0.8,
-        min_tracking_confidence = 0.8,
-        model_complexity = 0             # 0 for lightweight, 1 for full
+        static_image_mode=True,        # Since we're processing static images
+        max_num_hands=2,               # Adjust as needed
+        min_detection_confidence=0.8,
+        min_tracking_confidence=0.8,
+        model_complexity=0             # 0 for lightweight, 1 for full
     )
     mpDrawing = mp.solutions.drawing_utils
 
@@ -63,12 +79,23 @@ def main():
                 #     mpDrawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
                 #     mpDrawing.DrawingSpec(color=(0, 0, 255), thickness=2)
                 # )
-                print(idx, worldLandmarks)
-                
 
-            # Optionally, display the image with landmarks (uncomment if needed)
-            # cv2.imshow('Hand Landmarks', image)
-            # cv2.waitKey(0)  # Wait indefinitely until a key is pressed
+                # Process and print normalized landmarks
+                print(f"\nHand {idx} - Pointer Data (Normalized):")
+                handData = pointerData(handLandmarks)
+                print(handData)
+
+                # Print normalized landmarks with units
+                print_normalized_landmarks(handLandmarks)
+
+                # Process and print world landmarks
+                print(f"\nHand {idx} - Pointer Data (World):")
+                worldData = pointerWorldData(worldLandmarks)
+                print(worldData)
+
+                # Print world landmarks with units
+                print_world_landmarks(worldLandmarks)
+
         else:
             print(f"\nNo hands detected in image: {os.path.basename(imgPath)}")
 
