@@ -7,6 +7,7 @@
 # use "/Users/wasinlapthanaphat/Desktop/helloWorld/SeniorProject-backup/venv-metal/bin/python" for Pong.
 # use virtual enviroment "/Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal"
 # source /Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal/bin/activate
+# hello world
 
 import cv2
 import mediapipe as mp
