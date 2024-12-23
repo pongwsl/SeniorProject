@@ -1,10 +1,12 @@
 # test3.py
 # created by pongwsl on 20 dec 2024
-# lasted updated 20 dec 2024
-# update from test2a.py, to add def tipCoord(lm, i).
+# last updated 23 dec 2024
+# based on test2a.py, to add def pointerData(lm).
 # This code tested on python 3.9.13 on venv-metal.
 # To select Python Interpreter in VSCode: press [[cmd + shift + P]], type 'Python: Select Interpreter'
-# use "/Users/wasinlapthanaphat/Desktop/helloWorld/SeniorProject-backup/venv-metal/bin/python"
+# use "/Users/wasinlapthanaphat/Desktop/helloWorld/SeniorProject-backup/venv-metal/bin/python" for Pong.
+# use virtual enviroment "/Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal"
+# source /Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal/bin/activate
 
 import cv2
 import mediapipe as mp
@@ -70,12 +72,12 @@ def pointerData(lm):  # Nozzle on/off
     yawAngle = math.degrees(math.asin(link(lm, 8, 5, 'x') / length(lm, 8, 5)))
 
     # Pinching Action
-    if length(lm, 4, 3) <= length(lm, 8, 4): 
-        pinchingAction = 'Nozzle off'
+    if (length(lm, 8, 4) * 2.2) < length(lm, 4, 3): 
+        pinchingAction = 'Nozzle on '
     else:
-        pinchingAction = 'Nozzle on'
+        pinchingAction = 'Nozzle off'
     
-    return (pinchingAction, round(rollAngle, 2), round(pitchAngle, 2), round(yawAngle, 2))
+    return (pinchingAction, round(rollAngle, 2), round(pitchAngle, 2), round(yawAngle, 2), round(length(lm, 4, 3), 3), round(length(lm, 8, 4), 3))
 
 def main():
     # # Declare as global to modify it within the function
