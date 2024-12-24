@@ -1,6 +1,6 @@
 # pointerData.py
 # created by pongwsl on 23 dec 2024
-# last updated 23 dec 2024
+# last updated 24 dec 2024
 # based on test3.py, to globalize this function.
 # This code tested on python 3.9.13 on venv-metal.
 # To select Python Interpreter in VSCode: press [[cmd + shift + P]], type 'Python: Select Interpreter'
@@ -31,7 +31,7 @@ class VideoStream:
         self.ret, self.frame = self.capture.read()
         self.running = True
         self.lock = threading.Lock()
-        self.thread = threading.Thread(target=self.update, daemon=True)
+        self.thread = threading.Thread(target = self.update, daemon = True)
         self.thread.start()
 
     def update(self):
@@ -67,12 +67,18 @@ def pointerData(lm):
         yawAngle = math.degrees(math.asin(link(lm, 8, 5, 'x') / length(lm, 8, 5)))
 
         # Pinching Action
-        calibator = 1.5
+        pinchingAction = 'Nozzle off'
+        calibator = 1
         if (length(lm, 8, 4) * calibator) < length(lm, 4, 3): 
             pinchingAction = 'NOZZLE ON '
-        else:
-            pinchingAction = 'Nozzle off'
-        
+        elif (length(lm, 8, 3) * calibator) < length(lm, 4, 3): 
+            pinchingAction = 'NOZZLE ON '
+        elif (length(lm, 8, 2) * calibator) < length(lm, 4, 3): 
+            pinchingAction = 'NOZZLE ON '
+        elif (length(lm, 8, 1) * calibator) < length(lm, 4, 3): 
+            pinchingAction = 'NOZZLE ON '
+
+        # Return
         return (
             pinchingAction, 
             round(rollAngle, 2), 
