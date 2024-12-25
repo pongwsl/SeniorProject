@@ -107,11 +107,10 @@ def main():
     # Initialize MediaPipe Hands with world landmarks
     mpHands = mp.solutions.hands
     hands = mpHands.Hands(
-        static_image_mode=True,        # Since we're processing static images
-        max_num_hands=2,               # Adjust as needed
-        min_detection_confidence=0.8,
-        min_tracking_confidence=0.8,
-        model_complexity=0             # 0 for lightweight, 1 for full
+        static_image_mode = True,        # Since we're processing static images
+        max_num_hands = 1,               # Adjust as needed
+        min_detection_confidence = 0.5,
+        model_complexity = 1             # 0 for lightweight, 1 for full
     )
     mpDrawing = mp.solutions.drawing_utils
 
