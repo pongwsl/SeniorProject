@@ -2,10 +2,10 @@
 # created by pongwsl on 23 dec 2024
 # last updated 24 dec 2024
 # based on test3.py, to globalize this function.
-# This code tested on python 3.9.13 on venv-metal.
+# This code tested on python 3.9.12 on venvMetal.
 # To select Python Interpreter in VSCode: press [[cmd + shift + P]], type 'Python: Select Interpreter'
-# use "/Users/wasinlapthanaphat/Desktop/helloWorld/SeniorProject-backup/venv-metal/bin/python" for Pong.
-# use virtual enviroment "/Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal"
+# use "/Users/wasinlapthanaphat/Desktop/helloWorld/venvMetal/bin/Python"
+# use virtual enviroment "/Users/wasinlapthanaphat/Desktop/helloWorld/venvMetal"
 # source /Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal/bin/activate
 
 import cv2
