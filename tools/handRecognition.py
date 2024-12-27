@@ -7,7 +7,7 @@ import cv2
 import mediapipe as mp
 import time
 import threading
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 
 # Configuration Parameters
 FRAME_WIDTH = 640
@@ -39,7 +39,7 @@ class VideoStream:
                 self.ret = ret
                 self.frame = frame
 
-    def read(self) -> Tuple[bool, Optional[any]]:
+    def read(self) -> Tuple[bool, Optional[Any]]:
         with self.lock:
             return self.ret, self.frame.copy() if self.ret else (False, None)
 
@@ -67,7 +67,7 @@ class HandRecognition:
         )
         self.mpDrawing = mp.solutions.drawing_utils
 
-    def process_frame(self, frame: any) -> Tuple[any, List[mp.framework.formats.landmark_pb2.NormalizedLandmarkList]]:
+    def process_frame(self, frame: Any) -> Tuple[Any, List[Any]]:
         """
         Process a single frame to detect hands and return annotated frame and world landmarks.
 
@@ -100,7 +100,7 @@ class HandRecognition:
         
         return annotated_frame, world_landmarks
 
-    def get_world_landmarks(self, frame: any) -> List[mp.framework.formats.landmark_pb2.NormalizedLandmarkList]:
+    def get_world_landmarks(self, frame: Any) -> List[Any]:
         """
         Extract world landmarks from a frame.
 
