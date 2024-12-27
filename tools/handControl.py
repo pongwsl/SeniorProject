@@ -4,21 +4,21 @@
 # to control object in CoppeliaSim using MediaPipe
 
 import cv2
-from tools.handRecognition import HandRecognition, VideoStream
+from handRecognition import HandRecognition, VideoStream
 
 def main():
     # Initialize VideoStream
-    video_stream = VideoStream(0)
+    videoStream = VideoStream(0)
 
     # Initialize HandRecognition
-    hand_recognition = HandRecognition()
+    handRecognition = HandRecognition()
 
     while True:
-        success, frame = video_stream.read()
+        success, frame = videoStream.read()
         if not success:
             break
 
-        annotated_frame, landmarks = hand_recognition.process_frame(frame)
+        annotatedFrame, landmarks = handRecognition.processFrame(frame)
 
         # Use the landmarks as needed
         # For example, print the coordinates of the first landmark of the first hand
@@ -26,14 +26,14 @@ def main():
             first_landmark = landmarks[0].landmark[0]
             print(f'First Landmark: x={first_landmark.x}, y={first_landmark.y}, z={first_landmark.z}')
 
-        cv2.imshow('Main Hand Recognition', annotated_frame)
+        cv2.imshow('Main Hand Recognition', annotatedFrame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) != -1:
             break
 
     # Cleanup
-    hand_recognition.close()
-    video_stream.stop()
+    handRecognition.close()
+    videoStream.stop()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

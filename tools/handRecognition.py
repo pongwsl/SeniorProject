@@ -1,7 +1,7 @@
 # # tools/handRecognition.py
 # created by pongwsl on Dec 27, 2024
 # latest edited on Dec 27, 2024
-# to start camera and detect hand gesture/location
+# to start camera and detect hand gesture/location using MediaPipe
 
 import cv2
 import mediapipe as mp
@@ -10,13 +10,13 @@ import threading
 from typing import List, Tuple, Optional, Any
 
 # Configuration Parameters
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
-FRAME_SKIP = 0  # Set to >0 to skip frames
-MAX_NUM_HANDS = 1
-MIN_DETECTION_CONFIDENCE = 0.7
-MIN_TRACKING_CONFIDENCE = 0.7
-MODEL_COMPLEXITY = 0  # 0 for lightweight, 1 for full
+frameWidth = 640
+frameHeight = 480
+frameSkip = 0  # Set to >0 to skip frames
+maxNumHands = 1
+minDetectionConfidence = 0.7
+minTrackingConfidence = 0.7
+modelComplexity = 0  # 0 for lightweight, 1 for full
 
 class VideoStream:
     """
@@ -24,8 +24,8 @@ class VideoStream:
     """
     def __init__(self, src: int = 0):
         self.capture = cv2.VideoCapture(src)
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, frameWidth)
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, frameHeight)
         self.ret, self.frame = self.capture.read()
         self.running = True
         self.lock = threading.Lock()
@@ -53,21 +53,21 @@ class HandRecognition:
     HandRecognition class using MediaPipe to detect hands and extract world landmarks.
     """
     def __init__(self,
-                 max_num_hands: int = MAX_NUM_HANDS,
-                 min_detection_confidence: float = MIN_DETECTION_CONFIDENCE,
-                 min_tracking_confidence: float = MIN_TRACKING_CONFIDENCE,
-                 model_complexity: int = MODEL_COMPLEXITY):
+                 max_num_hands: int = maxNumHands,
+                 min_detection_confidence: float = minDetectionConfidence,
+                 min_tracking_confidence: float = minTrackingConfidence,
+                 model_complexity: int = modelComplexity):
         self.mpHands = mp.solutions.hands
         self.hands = self.mpHands.Hands(
-            static_image_mode=False,
-            max_num_hands=max_num_hands,
-            min_detection_confidence=min_detection_confidence,
-            min_tracking_confidence=min_tracking_confidence,
-            model_complexity=model_complexity
+            static_image_mode = False,
+            max_num_hands = max_num_hands,
+            min_detection_confidence = min_detection_confidence,
+            min_tracking_confidence = min_tracking_confidence,
+            model_complexity = model_complexity
         )
         self.mpDrawing = mp.solutions.drawing_utils
 
-    def process_frame(self, frame: Any) -> Tuple[Any, List[Any]]:
+    def processFrame(self, frame: Any) -> Tuple[Any, List[Any]]:
         """
         Process a single frame to detect hands and return annotated frame and world landmarks.
 
@@ -80,27 +80,27 @@ class HandRecognition:
         # Flip the frame horizontally for a later selfie-view display
         frame = cv2.flip(frame, 1)
         # Convert the BGR image to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        rgbFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # Process the frame and find hands
-        results = self.hands.process(rgb_frame)
+        results = self.hands.process(rgbFrame)
         # Convert back to BGR for OpenCV
-        annotated_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
+        annotatedFrame = cv2.cvtColor(rgbFrame, cv2.COLOR_RGB2BGR)
 
-        world_landmarks = []
+        worldLandmarks = []
         if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
+            for handLandmarks in results.multi_hand_landmarks:
                 self.mpDrawing.draw_landmarks(
-                    annotated_frame,
-                    hand_landmarks,
+                    annotatedFrame,
+                    handLandmarks,
                     self.mpHands.HAND_CONNECTIONS,
                     self.mpDrawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
                     self.mpDrawing.DrawingSpec(color=(0, 0, 255), thickness=2)
                 )
-                world_landmarks.append(hand_landmarks)
+                worldLandmarks.append(handLandmarks)
         
-        return annotated_frame, world_landmarks
+        return annotatedFrame, worldLandmarks
 
-    def get_world_landmarks(self, frame: Any) -> List[Any]:
+    def getWorldLandmarks(self, frame: Any) -> List[Any]:
         """
         Extract world landmarks from a frame.
 
@@ -110,13 +110,18 @@ class HandRecognition:
         Returns:
             List of world landmarks for each detected hand.
         """
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.hands.process(rgb_frame)
-        world_landmarks = []
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                world_landmarks.append(hand_landmarks)
-        return world_landmarks
+        rgbFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.hands.process(rgbFrame)
+        worldLandmarks = []
+        # normalized hand landmarks
+        # if results.multi_hand_world_landmarks:
+            # for handLandmarks in results.multi_hand_landmarks:
+
+         # world landmarks
+        if results.multi_hand_world_landmarks:
+            for handLandmarks in results.multi_hand_world_landmarks:
+                worldLandmarks.append(handLandmarks)
+        return worldLandmarks
 
     def close(self):
         """
@@ -130,68 +135,68 @@ def main():
     Captures video from webcam, processes each frame to detect hands, and displays the result with FPS.
     """
     # Initialize VideoStream
-    video_stream = VideoStream(0)
+    videoStream = VideoStream(0)
 
     # Initialize HandRecognition
-    hand_recognition = HandRecognition(
-        max_num_hands=MAX_NUM_HANDS,
-        min_detection_confidence=MIN_DETECTION_CONFIDENCE,
-        min_tracking_confidence=MIN_TRACKING_CONFIDENCE,
-        model_complexity=MODEL_COMPLEXITY
+    handRecognition = HandRecognition(
+        max_num_hands = maxNumHands,
+        min_detection_confidence = minDetectionConfidence,
+        min_tracking_confidence = minTrackingConfidence,
+        model_complexity = modelComplexity
     )
 
     # Variables for FPS calculation
-    prev_time = time.time()
+    prevTime = time.time()
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     try:
         while True:
-            success, frame = video_stream.read()
+            success, frame = videoStream.read()
             if not success or frame is None:
                 print("Failed to read frame from camera. Exiting...")
                 break
 
             # Optional: Frame Skipping
-            # Implement frame skipping logic here if FRAME_SKIP > 0
+            # Implement frame skipping logic here if frameSkip > 0
             # Example:
-            # if FRAME_SKIP > 0:
-            #     skip = FRAME_SKIP
+            # if frameSkip > 0:
+            #     skip = frameSkip
             #     while skip > 0 and success:
-            #         success, frame = video_stream.read()
+            #         success, frame = videoStream.read()
             #         skip -= 1
 
             # Process the frame to detect hands and get annotated frame
-            annotated_frame, world_landmarks = hand_recognition.process_frame(frame)
+            annotatedFrame, worldLandmarks = handRecognition.processFrame(frame)
 
             # Calculate FPS
-            current_time = time.time()
-            fps = 1 / (current_time - prev_time) if (current_time - prev_time) > 0 else 0
-            prev_time = current_time
+            currentTime = time.time()
+            fps = 1 / (currentTime - prevTime) if (currentTime - prevTime) > 0 else 0
+            prevTime = currentTime
 
             # Overlay FPS on the frame
             cv2.putText(
-                annotated_frame, f'FPS: {fps:.2f}', (10, 30),
+                annotatedFrame, f'FPS: {fps:.2f}', (10, 30),
                 font, 1, (0, 255, 0), 2, cv2.LINE_AA
             )
 
             # Optionally, display world landmarks coordinates
-            if world_landmarks:
-                for idx, hand in enumerate(world_landmarks):
+            if worldLandmarks:
+                for idx, hand in enumerate(worldLandmarks):
                     for lm_id, landmark in enumerate(hand.landmark):
                         # Convert normalized coordinates to pixel values
-                        h, w, _ = annotated_frame.shape
+                        h, w, _ = annotatedFrame.shape
                         cx, cy, cz = int(landmark.x * w), int(landmark.y * h), landmark.z
                         cv2.putText(
-                            annotated_frame, f'{lm_id}: ({cx}, {cy}, {cz:.2f})',
+                            annotatedFrame, f'{lm_id}: ({cx}, {cy}, {cz:.2f})',
                             (10, 50 + idx * 20 + lm_id * 15),
                             font, 0.5, (255, 0, 0), 1, cv2.LINE_AA
                         )
 
             # Display the resulting frame
-            cv2.imshow('Hand Recognition Debug', annotated_frame)
+            cv2.imshow('Hand Recognition Debug', annotatedFrame)
 
-            # Exit Mechanism: Press 'q' to quit
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Exit Mechanism: Press any key to quit
+            if cv2.waitKey(1) != -1:
                 print("Exit key pressed. Exiting...")
                 break
 
@@ -200,8 +205,8 @@ def main():
 
     finally:
         # Cleanup
-        hand_recognition.close()
-        video_stream.stop()
+        handRecognition.close()
+        videoStream.stop()
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
