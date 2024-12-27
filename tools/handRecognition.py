@@ -1,4 +1,4 @@
-# # tools/handRecognition.py
+# tools/handRecognition.py
 # created by pongwsl on Dec 27, 2024
 # latest edited on Dec 27, 2024
 # to start camera and detect hand gesture/location using MediaPipe
@@ -86,7 +86,7 @@ class HandRecognition:
         # Convert back to BGR for OpenCV
         annotatedFrame = cv2.cvtColor(rgbFrame, cv2.COLOR_RGB2BGR)
 
-        worldLandmarks = []
+        # Draw normalized hand landmarks on the annotated frame
         if results.multi_hand_landmarks:
             for handLandmarks in results.multi_hand_landmarks:
                 self.mpDrawing.draw_landmarks(
@@ -96,32 +96,14 @@ class HandRecognition:
                     self.mpDrawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
                     self.mpDrawing.DrawingSpec(color=(0, 0, 255), thickness=2)
                 )
-                worldLandmarks.append(handLandmarks)
         
-        return annotatedFrame, worldLandmarks
-
-    def getWorldLandmarks(self, frame: Any) -> List[Any]:
-        """
-        Extract world landmarks from a frame.
-
-        Args:
-            frame: The BGR image frame to process.
-
-        Returns:
-            List of world landmarks for each detected hand.
-        """
-        rgbFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.hands.process(rgbFrame)
+        # Extract world landmarks if available
         worldLandmarks = []
-        # normalized hand landmarks
-        # if results.multi_hand_world_landmarks:
-            # for handLandmarks in results.multi_hand_landmarks:
-
-         # world landmarks
         if results.multi_hand_world_landmarks:
-            for handLandmarks in results.multi_hand_world_landmarks:
-                worldLandmarks.append(handLandmarks)
-        return worldLandmarks
+            for worldLandmark in results.multi_hand_world_landmarks:
+                worldLandmarks.append(worldLandmark)
+
+        return annotatedFrame, worldLandmarks
 
     def close(self):
         """
@@ -165,7 +147,7 @@ def main():
             #         success, frame = videoStream.read()
             #         skip -= 1
 
-            # Process the frame to detect hands and get annotated frame
+            # Process the frame to detect hands and get annotated frame and world landmarks
             annotatedFrame, worldLandmarks = handRecognition.processFrame(frame)
 
             # Calculate FPS
@@ -183,11 +165,10 @@ def main():
             if worldLandmarks:
                 for idx, hand in enumerate(worldLandmarks):
                     for lm_id, landmark in enumerate(hand.landmark):
-                        # Convert normalized coordinates to pixel values
-                        h, w, _ = annotatedFrame.shape
-                        cx, cy, cz = int(landmark.x * w), int(landmark.y * h), landmark.z
+                        # World landmarks are in meters, you might want to scale them or display as-is
+                        x, y, z = landmark.x, landmark.y, landmark.z
                         cv2.putText(
-                            annotatedFrame, f'{lm_id}: ({cx}, {cy}, {cz:.2f})',
+                            annotatedFrame, f'{lm_id}: ({x:.2f}, {y:.2f}, {z:.2f})',
                             (10, 50 + idx * 20 + lm_id * 15),
                             font, 0.5, (255, 0, 0), 1, cv2.LINE_AA
                         )

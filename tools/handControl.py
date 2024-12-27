@@ -18,13 +18,13 @@ def main():
         if not success:
             break
 
-        annotatedFrame, landmarks = handRecognition.processFrame(frame)
+        annotatedFrame, worldLandmarks = handRecognition.processFrame(frame)
 
-        # Use the landmarks as needed
-        # For example, print the coordinates of the first landmark of the first hand
-        if landmarks:
-            first_landmark = landmarks[0].landmark[0]
-            print(f'First Landmark: x={first_landmark.x}, y={first_landmark.y}, z={first_landmark.z}')
+        # Use the worldLandmarks as needed
+        # Example: Print the coordinates of the first landmark of the first hand
+        if worldLandmarks:
+            firstLandmark = worldLandmarks[0].landmark[0]
+            print(f'First Landmark: x={firstLandmark.x:.2f}, y={firstLandmark.y:.2f}, z={firstLandmark.z:.2f}')
 
         cv2.imshow('Main Hand Recognition', annotatedFrame)
 
