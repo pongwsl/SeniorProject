@@ -16,7 +16,7 @@ frameSkip = 0  # Set to >0 to skip frames
 maxNumHands = 1
 minDetectionConfidence = 0.7
 minTrackingConfidence = 0.7
-modelComplexity = 0  # 0 for lightweight, 1 for full
+modelComplexity = 1  # 0 for lightweight, 1 for full
 
 class VideoStream:
     """
@@ -97,13 +97,13 @@ class HandRecognition:
                     self.mpDrawing.DrawingSpec(color=(0, 0, 255), thickness=2)
                 )
         
-        # Extract world landmarks if available
-        worldLandmarks = []
-        if results.multi_hand_world_landmarks:
-            for worldLandmark in results.multi_hand_world_landmarks:
-                worldLandmarks.append(worldLandmark)
+        # Extract hand landmarks if available
+        handLandmarks = []
+        if results.multi_hand_landmarks:
+            for handLandmark in results.multi_hand_landmarks:
+                handLandmarks.append(handLandmark)
 
-        return annotatedFrame, worldLandmarks
+        return annotatedFrame, handLandmarks
 
     def close(self):
         """
@@ -148,7 +148,7 @@ def main():
             #         skip -= 1
 
             # Process the frame to detect hands and get annotated frame and world landmarks
-            annotatedFrame, worldLandmarks = handRecognition.processFrame(frame)
+            annotatedFrame, handLandmarks = handRecognition.processFrame(frame)
 
             # Calculate FPS
             currentTime = time.time()
@@ -162,8 +162,8 @@ def main():
             )
 
             # Optionally, display world landmarks coordinates
-            if worldLandmarks:
-                for idx, hand in enumerate(worldLandmarks):
+            if handLandmarks:
+                for idx, hand in enumerate(handLandmarks):
                     for lm_id, landmark in enumerate(hand.landmark):
                         # World landmarks are in meters, you might want to scale them or display as-is
                         x, y, z = landmark.x, landmark.y, landmark.z
