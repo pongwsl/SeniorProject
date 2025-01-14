@@ -163,9 +163,10 @@ def main():
 
             # Optionally, display world landmarks coordinates
             if handLandmarks:
+                # each hand (which we should have only one hand in the frame for this project)
                 for idx, hand in enumerate(handLandmarks):
+                    # each landmark
                     for lm_id, landmark in enumerate(hand.landmark):
-                        # World landmarks are in meters, you might want to scale them or display as-is
                         x, y, z = landmark.x, landmark.y, landmark.z
                         cv2.putText(
                             annotatedFrame, f'{lm_id}: ({x:.2f}, {y:.2f}, {z:.2f})',

@@ -1,7 +1,7 @@
 # tools/handControl.py
 # created by pongwsl on Dec 27, 2024
 # latest edited on Dec 27, 2024
-# to start camera and detect hand gesture/location using MediaPipe
+# to use handRecognition.py to get dx, dy, dz
 
 import cv2
 import time
@@ -27,7 +27,7 @@ def handControl():
         model_complexity=0
     )
 
-    prev_pos = None  # To store the previous position of the wrist
+    prevPos = None  # To store the previous position of the wrist
 
     try:
         while True:
@@ -37,21 +37,20 @@ def handControl():
                 break
 
             # Process the frame to detect hands and get annotated frame and world landmarks
-            annotatedFrame, worldLandmarks = handRecognition.processFrame(frame)
+            annotatedFrame, handLandmarks = handRecognition.processFrame(frame)
 
-            if worldLandmarks:
-                # Assuming we're tracking the first hand's wrist (landmark 0)
-                wrist_landmark = worldLandmarks[0].landmark[0]
-                current_pos = (wrist_landmark.x, wrist_landmark.y, wrist_landmark.z)
+            if handLandmarks:
+                pointLandmark = handLandmarks[0].landmark[8] # first hand, landmark no. 8
+                currentPos = (pointLandmark.x, pointLandmark.y, pointLandmark.z)
 
-                if prev_pos is not None:
-                    dx = current_pos[0] - prev_pos[0]
-                    dy = current_pos[1] - prev_pos[1]
-                    dz = current_pos[2] - prev_pos[2]
+                if prevPos is not None:
+                    dx = currentPos[0] - prevPos[0]
+                    dy = currentPos[1] - prevPos[1]
+                    dz = currentPos[2] - prevPos[2]
                 else:
                     dx = dy = dz = 0.0  # No movement in the first frame
 
-                prev_pos = current_pos
+                prevPos = currentPos
 
                 yield (dx, dy, dz)
             else:
