@@ -7,7 +7,7 @@ import cv2
 import time
 from typing import Tuple, Optional
 
-from handRecognition import HandRecognition, VideoStream
+from tools.handRecognition import HandRecognition, VideoStream
 
 def handControl():
     """

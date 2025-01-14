@@ -10,7 +10,7 @@ import matplotlib.animation as animation
 import time
 from typing import Tuple
 
-from handControl import handControl
+from tools.handControl import handControl
 
 def getPosition() -> Tuple[float, float, float]:
     """
@@ -26,9 +26,9 @@ def getPosition() -> Tuple[float, float, float]:
     x, y, z = 0.0, 0.0, 0.0
 
     # Initialize the handControl generator
-    control_gen = handControl()
+    controlGen = handControl()
 
-    for dx, dy, dz in control_gen:
+    for dx, dy, dz in controlGen:
         # Update the position based on the deltas
         x += dx
         y += dy
@@ -42,7 +42,7 @@ def main():
     Uses Matplotlib to display the current position of the object in real-time.
     """
     # Initialize the position generator
-    position_gen = getPosition()
+    positionGen = getPosition()
 
     # Set up the Matplotlib figure and 3D axes
     fig = plt.figure()
@@ -62,7 +62,7 @@ def main():
 
     # Optionally, store the trajectory
     trajectory_x, trajectory_y, trajectory_z = [], [], []
-    traj_line, = ax.plot([], [], [], linestyle='--', color='blue')
+    trajLine, = ax.plot([], [], [], linestyle='--', color='blue')
 
     def update_plot(frame):
         """
@@ -72,11 +72,11 @@ def main():
             frame: Frame number (unused).
         """
         try:
-            x, y, z = next(position_gen)
+            x, y, z = next(positionGen)
         except StopIteration:
             # If the generator is exhausted, stop the animation
             ani.event_source.stop()
-            return point, traj_line
+            return point, trajLine
 
         # Update the point's position
         point.set_data([x], [y])
@@ -86,8 +86,8 @@ def main():
         trajectory_x.append(x)
         trajectory_y.append(y)
         trajectory_z.append(z)
-        traj_line.set_data(trajectory_x, trajectory_y)
-        traj_line.set_3d_properties(trajectory_z)
+        trajLine.set_data(trajectory_x, trajectory_y)
+        trajLine.set_3d_properties(trajectory_z)
 
         # Optionally, adjust the plot limits dynamically
         buffer = 0.5
@@ -95,7 +95,7 @@ def main():
         ax.set_ylim(min(trajectory_y) - buffer, max(trajectory_y) + buffer)
         ax.set_zlim(min(trajectory_z) - buffer, max(trajectory_z) + buffer)
 
-        return point, traj_line
+        return point, trajLine
 
     # Create the animation
     ani = animation.FuncAnimation(
