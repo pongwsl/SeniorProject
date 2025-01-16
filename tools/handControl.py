@@ -1,20 +1,29 @@
 # tools/handControl.py
 # created by pongwsl on Dec 27, 2024
 # latest edited on Dec 27, 2024
-# to use handRecognition.py to get dx, dy, dz
+#
+# Uses handRecognition.py to get dx, dy from index finger movement,
+# and calculates dz from the change in distance between landmarks 0 and 9
+# to indicate how far the hand is from the camera.
 
 import cv2
 import time
+import math
 from typing import Tuple, Optional
 
 from tools.handRecognition import HandRecognition, VideoStream
 
 def handControl():
     """
-    Detects hand movement and yields the delta (dx, dy, dz) of the wrist for each frame.
+    Detects hand movement and yields the delta (dx, dy, dz).
+
+    - dx, dy: derived from the difference in the index fingertip (landmark 8)
+              between consecutive frames.
+    - dz:     derived from how the distance between landmarks 0 and 9 changes,
+              indicating hand moving closer or farther from the camera.
 
     Yields:
-        Tuple[float, float, float]: The change in x, y, z coordinates since the last frame.
+        Tuple[float, float, float]: (dx, dy, dz)
     """
     # Initialize VideoStream
     videoStream = VideoStream(0)
@@ -27,7 +36,12 @@ def handControl():
         model_complexity=0
     )
 
-    prevPos = None  # To store the previous position of the wrist
+    # To store the previous frame's index-finger position and hand size
+    prevFingerPos = None
+    prevHandSize = None
+
+    # A scale factor to amplify/reduce dz changes based on hand size
+    dz_scale_factor = 1.0
 
     try:
         while True:
@@ -40,17 +54,40 @@ def handControl():
             annotatedFrame, handLandmarks = handRecognition.processFrame(frame)
 
             if handLandmarks:
-                pointLandmark = handLandmarks[0].landmark[8] # first hand, landmark no. 8
-                currentPos = (pointLandmark.x, pointLandmark.y, pointLandmark.z)
+                # Extract the index-finger tip (landmark 8)
+                indexTip = handLandmarks[0].landmark[8]
+                currentFingerPos = (indexTip.x, indexTip.y, indexTip.z)
 
-                if prevPos is not None:
-                    dx = currentPos[0] - prevPos[0]
-                    dy = currentPos[1] - prevPos[1]
-                    dz = currentPos[2] - prevPos[2]
+                # Compute dx, dy from the index-finger tip movement
+                if prevFingerPos is not None:
+                    dx = currentFingerPos[0] - prevFingerPos[0]
+                    dy = currentFingerPos[1] - prevFingerPos[1]
                 else:
-                    dx = dy = dz = 0.0  # No movement in the first frame
+                    dx = 0.0
+                    dy = 0.0
 
-                prevPos = currentPos
+                # Update for next iteration
+                prevFingerPos = currentFingerPos
+
+                # -- Compute hand size (distance between landmarks 0 and 9) --
+                wrist = handLandmarks[0].landmark[0]
+                palm  = handLandmarks[0].landmark[9]
+                # 3D distance between wrist(0) and palm(9):
+                currentHandSize = math.sqrt(
+                    (wrist.x - palm.x)**2
+                    + (wrist.y - palm.y)**2
+                    + (wrist.z - palm.z)**2
+                )
+
+                # If we have a previous hand size, compute dz from the size change
+                if prevHandSize is not None:
+                    # If the hand becomes smaller, we interpret that as moving away => +dz
+                    sizeDiff = (prevHandSize - currentHandSize)
+                    dz = dz_scale_factor * sizeDiff
+                else:
+                    dz = 0.0
+
+                prevHandSize = currentHandSize
 
                 yield (dx, dy, dz)
             else:
@@ -76,12 +113,11 @@ def handControl():
 
 def main():
     """
-    Main function for debugging handControl.
+    Main function for debugging handControl().
     Continuously prints the (dx, dy, dz) output from handControl().
     """
-
     for dx, dy, dz in handControl():
-        print(f"dx: {dx:.2f}, dy: {dy:.2f}, dz: {dz:.2f}")
+        print(f"dx: {dx:.4f}, dy: {dy:.4f}, dz: {dz:.4f}")
 
 if __name__ == "__main__":
     main()
