@@ -1,6 +1,6 @@
 # test11.py
 # created by pongwsl on Jan 14, 2024
-# latest edited on Jan 14, 2024
+# latest edited on Feb 05, 2025
 #
 # This script demonstrates how to retrieve (x, y, z) values from hand control
 # (via getPosition.py) and then move a sphere in CoppeliaSim in real-time.
@@ -23,6 +23,8 @@ from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 # Adjust the import path if needed
 from tools.getPosition import getPosition
 
+# Define constant for gravity parameter (1001 is commonly used for gravity in CoppeliaSim)
+# FLOATPARAM_GRAVITY = 1001
 
 def main():
     print("Program started")
@@ -31,10 +33,24 @@ def main():
     client = RemoteAPIClient()
     sim = client.require('sim')
 
-    # (Optional) If you want to load a specific scene instead of an already-running instance:
-    sim.loadScene(sim.getStringParam(sim.stringparam_scenedefaultdir) + '/sphere.ttt')
+    # Ensure the simulation is stopped before loading a new scene
+    try:
+        sim.stopSimulation()
+    except Exception:
+        # If simulation is already stopped, ignore the error
+        pass
 
-    # Start the simulation (if not already started)
+    # Give the simulation time to stop
+    time.sleep(0.5)
+
+    # Load a specific scene (adjust the scene path as necessary)
+    scene_path = sim.getStringParam(sim.stringparam_scenedefaultdir) + '/sphere.ttt'
+    sim.loadScene(scene_path)
+
+    # Set the simulation gravity to 0 while simulation is stopped
+    # sim.setFloatParameter(FLOATPARAM_GRAVITY, 0)
+
+    # Start the simulation
     sim.startSimulation()
 
     # Retrieve a handle to your sphere in CoppeliaSim
