@@ -20,7 +20,6 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "tools"
 from .handRecognition import HandRecognition, VideoStream
 
-
 def handControl():
     """
     Detects hand movement and yields the delta (dx, dy, dz).

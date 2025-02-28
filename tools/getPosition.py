@@ -1,18 +1,26 @@
 # tools/getPosition.py
 # created by pongwsl on Dec 27, 2024
-# latest edited on Dec 27, 2024
+# latest edited on Feb 28, 2024
 # Controls the position of an object based on hand movements using MediaPipe
 # Displays the object's position in real-time using Matplotlib
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
+from matplotlib.widgets import Button
 import time
-from typing import Tuple
+from typing import Generator, Tuple
+# from tools.handControl import handControl
 
-from tools.handControl import handControl
+if __name__ == "__main__" and __package__ is None:
+    import sys
+    import os
+    # Add the parent directory to sys.path so that 'tools' is recognized.
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    __package__ = "tools"
+from .handControl import handControl
 
-def getPosition() -> Tuple[float, float, float]:
+def getPosition() -> Generator[Tuple[float, float, float], None, None]:
     """
     Controls the position of an object based on hand movement deltas.
 
@@ -60,9 +68,10 @@ def main():
     # Initialize a point in the plot to represent the object
     point, = ax.plot([0], [0], [0], marker='o', markersize=10, color='red')
 
-    # Optionally, store the trajectory
+    # Store the trajectory
     trajectory_x, trajectory_y, trajectory_z = [], [], []
-    trajLine, = ax.plot([], [], [], linestyle='--', color='blue')
+    # Use a solid line for the trajectory
+    trajLine, = ax.plot([], [], [], linestyle='-', color='blue')
 
     def update_plot(frame):
         """
@@ -101,6 +110,28 @@ def main():
     ani = animation.FuncAnimation(
         fig, update_plot, frames=None, interval=50, blit=False
     )
+
+    # Add a "Clear" button to reset the trajectory
+    ax_clear = plt.axes([0.8, 0.05, 0.1, 0.075])  # Adjust position as needed
+    clear_button = Button(ax_clear, 'Clear')
+
+    def clear_graph(event):
+        """
+        Callback function for the Clear button.
+        Resets the trajectory data and the corresponding plot.
+        """
+        trajectory_x.clear()
+        trajectory_y.clear()
+        trajectory_z.clear()
+        trajLine.set_data([], [])
+        trajLine.set_3d_properties([])
+        # Optionally, reset axis limits to defaults
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.set_zlim(-1, 1)
+        plt.draw()
+
+    clear_button.on_clicked(clear_graph)
 
     # Display the plot
     plt.show()
