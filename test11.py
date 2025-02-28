@@ -47,9 +47,6 @@ def main():
     scene_path = sim.getStringParam(sim.stringparam_scenedefaultdir) + '/sphere.ttt'
     sim.loadScene(scene_path)
 
-    # Set the simulation gravity to 0 while simulation is stopped
-    # sim.setFloatParameter(FLOATPARAM_GRAVITY, 0)
-
     # Start the simulation
     sim.startSimulation()
 

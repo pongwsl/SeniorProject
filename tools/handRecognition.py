@@ -181,7 +181,7 @@ def main():
             if cv2.waitKey(1) != -1:
                 print("Exit key pressed. Exiting...")
                 break
-
+        
     except KeyboardInterrupt:
         print("Keyboard interrupt received. Exiting...")
 

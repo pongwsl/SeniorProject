@@ -1,6 +1,6 @@
 # tools/handControl.py
 # created by pongwsl on Dec 27, 2024
-# latest edited on Dec 27, 2024
+# latest edited on Feb 21, 2025
 #
 # Uses handRecognition.py to get dx, dy from index finger movement,
 # and calculates dz from the change in distance between landmarks 0 and 9
@@ -11,7 +11,15 @@ import time
 import math
 from typing import Tuple, Optional
 
-from tools.handRecognition import HandRecognition, VideoStream
+# When running this module directly, adjust sys.path to ensure the parent folder is in the path.
+if __name__ == "__main__" and __package__ is None:
+    import sys
+    import os
+    # Add the parent directory to sys.path so that 'tools' is recognized.
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    __package__ = "tools"
+from .handRecognition import HandRecognition, VideoStream
+
 
 def handControl():
     """
@@ -41,7 +49,7 @@ def handControl():
     prevHandSize = None
 
     # A scale factor to amplify/reduce dz changes based on hand size
-    dz_scale_factor = 1.0
+    dzScaleFactor = 1.0
 
     try:
         while True:
@@ -72,35 +80,39 @@ def handControl():
                 # -- Compute hand size (distance between landmarks 0 and 9) --
                 wrist = handLandmarks[0].landmark[0]
                 palm  = handLandmarks[0].landmark[9]
-                # 3D distance between wrist(0) and palm(9):
+                # 3D distance between wrist (0) and palm (9):
                 currentHandSize = math.sqrt(
-                    (wrist.x - palm.x)**2
-                    + (wrist.y - palm.y)**2
-                    + (wrist.z - palm.z)**2
+                    (wrist.x - palm.x)**2 +
+                    (wrist.y - palm.y)**2 +
+                    (wrist.z - palm.z)**2
                 )
 
                 # If we have a previous hand size, compute dz from the size change
                 if prevHandSize is not None:
                     # If the hand becomes smaller, we interpret that as moving away => +dz
                     sizeDiff = (prevHandSize - currentHandSize)
-                    dz = dz_scale_factor * sizeDiff
+                    dz = dzScaleFactor * sizeDiff
                 else:
                     dz = 0.0
 
                 prevHandSize = currentHandSize
-
-                yield (dx, dy, dz)
             else:
-                # No hand detected; yield zero movement
-                yield (0.0, 0.0, 0.0)
+                dx, dy, dz = 0.0, 0.0, 0.0
 
-            # Display the annotated frame for debugging purposes
+            # Overlay the movement values on the annotated frame.
+            text = f"dx: {dx:.4f}, dy: {dy:.4f}, dz: {dz:.4f}"
+            cv2.putText(annotatedFrame, text, (10, 30), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
+            # Display the annotated frame for debugging purposes.
             cv2.imshow('Hand Control', annotatedFrame)
 
-            # Exit Mechanism: Press 'q' to quit
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("Exit key pressed. Exiting...")
+            # Exit mechanism: Press any key to exit.
+            if cv2.waitKey(1) != -1:
+                print("Key pressed. Exiting...")
                 break
+
+            yield (dx, dy, dz)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt received. Exiting...")
@@ -111,13 +123,16 @@ def handControl():
         videoStream.stop()
         cv2.destroyAllWindows()
 
+
 def main():
     """
     Main function for debugging handControl().
-    Continuously prints the (dx, dy, dz) output from handControl().
+    The (dx, dy, dz) values are now displayed on the imshow window instead of printing to the console.
     """
-    for dx, dy, dz in handControl():
-        print(f"dx: {dx:.4f}, dy: {dy:.4f}, dz: {dz:.4f}")
+    for _ in handControl():
+        # The loop is solely to run handControl and display the video feed.
+        pass
+
 
 if __name__ == "__main__":
     main()
