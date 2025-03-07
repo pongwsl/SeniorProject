@@ -89,8 +89,7 @@ def handControl():
                 # If we have a previous hand size, compute dz from the size change
                 if prevHandSize is not None:
                     # If the hand becomes smaller, we interpret that as moving away => +dz
-                    sizeDiff = (prevHandSize - currentHandSize)
-                    dz = dzScaleFactor * sizeDiff
+                    dz = dzScaleFactor * (1/currentHandSize - 1/prevHandSize)
                 else:
                     dz = 0.0
 
