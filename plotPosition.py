@@ -1,5 +1,6 @@
 # plotPosition.py
 # by pongwsl on feb 28, 2025
+# edited on mar 7, 2025
 # use position data .txt to plot a matlab graph
 
 import matplotlib.pyplot as plt
