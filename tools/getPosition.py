@@ -31,7 +31,7 @@ def getPosition() -> Generator[Tuple[float, float, float], None, None]:
         Tuple[float, float, float]: The updated (x, y, z) position of the object.
     """
     # Initialize the starting position
-    x, y, z = 0.0, 0.0, 0.0
+    x, y, z = -0.4, -0.1, 0.5
 
     # Initialize the handControl generator
     controlGen = handControl()
@@ -40,7 +40,7 @@ def getPosition() -> Generator[Tuple[float, float, float], None, None]:
         # Update the position based on the deltas
         x += dx
         y += dy
-        z += dz
+        z += dz*0.1
 
         yield (x, y, z)
 

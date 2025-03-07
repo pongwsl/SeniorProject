@@ -3,8 +3,11 @@
 # to use postions from .txt file to move UR3 robot in CoppeliaSim
 # based on p'nine's work. thanks to P'Nine Ninth2234 >> see his work in GitHub.
 
+import time
+
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 from tools.ur3 import UR3
+from tools.getPosition import getPosition
 
 input("""
 Before starting, open CoppeliaSim:
@@ -15,24 +18,32 @@ Press ENTER to continue...
 client = RemoteAPIClient()
 sim = client.getObject('sim')
 
-ur3 = UR3(sim,"/UR3")
-
+ur3 = UR3(sim, "/UR3")
 ur3.reset_target()
 sim.startSimulation()
 
-# -----move-----
-quart = [0.5,0.5,0.5,0.5]
-path_pos = [[-0.4,-0.1,0.5],
-            [-0.4,0.1,0.5],
-            [-0.4,0.1,0.3],
-            [-0.4,-0.1,0.3]]
+# Define the quaternion (orientation) values
+quart = [0.5, 0.5, 0.5, 0.5]
 
-for _ in range(3):
-    for pos in path_pos:
-        pose_to_move = pos+quart
-        ur3.move_pose(pose_to_move)
-        print(pose_to_move)
+# Get the position generator (handControl() internally displays the annotated frame)
+pos_gen = getPosition()
 
-# --------------
+while True:
+    try:
+        pos = next(pos_gen)
+    except StopIteration:
+        print("Hand control exited. Exiting simulation.")
+        break
+
+    # Combine the position with the quaternion
+    pose_to_move = list(pos) + quart
+    
+
+    # Command the UR3 robot to move to the new pose
+    ur3.move_pose(pose_to_move)
+    print("Moving to pose:", pose_to_move)
+
+    # Small delay to avoid overloading the simulation
+    time.sleep(0.05)
 
 sim.stopSimulation()

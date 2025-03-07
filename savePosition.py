@@ -9,18 +9,18 @@ from tools.getPosition import getPosition
 
 def main():
     # Initialize the position generator from getPosition()
-    position_generator = getPosition()
+    positionGenerator = getPosition()
     
     # List to store the recorded positions
     positions = []
     
     # Record positions for 10 seconds
-    start_time = time.time()
+    startTime = time.time()
     print("Recording positions for 10 seconds...")
-    while time.time() - start_time < 10:
+    while time.time() - startTime < 10:
         try:
             # Get the next position from the generator
-            pos = next(position_generator)
+            pos = next(positionGenerator)
             positions.append(pos)
             # Sleep briefly to avoid a busy loop (adjust if needed)
             time.sleep(0.01)
