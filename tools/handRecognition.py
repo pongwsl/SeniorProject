@@ -8,6 +8,9 @@ import mediapipe as mp
 import time
 import threading
 from typing import List, Tuple, Optional, Any
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import stats  # Import for mode calculation
 
 # Configuration Parameters
 frameWidth = 640
@@ -130,6 +133,7 @@ def main():
     # Variables for FPS calculation
     prevTime = time.time()
     font = cv2.FONT_HERSHEY_SIMPLEX
+    latencies = []
 
     try:
         while True:
@@ -150,8 +154,10 @@ def main():
             # Process the frame to detect hands and get annotated frame and world landmarks
             annotatedFrame, handLandmarks = handRecognition.processFrame(frame)
 
-            # Calculate FPS
+            # Calculate FPS and record latency
             currentTime = time.time()
+            latency = (currentTime - prevTime) * 1000  # Convert to milliseconds
+            latencies.append(latency)
             fps = 1 / (currentTime - prevTime) if (currentTime - prevTime) > 0 else 0
             prevTime = currentTime
 
@@ -159,6 +165,10 @@ def main():
             cv2.putText(
                 annotatedFrame, f'FPS: {fps:.2f}', (10, 30),
                 font, 1, (0, 255, 0), 2, cv2.LINE_AA
+            )
+            cv2.putText(
+                annotatedFrame, f'Frames: {len(latencies)}', (10, 60),
+                font, 1, (0, 255, 255), 2, cv2.LINE_AA
             )
 
             # Optionally, display world landmarks coordinates
@@ -190,6 +200,36 @@ def main():
         handRecognition.close()
         videoStream.stop()
         cv2.destroyAllWindows()
+        total_frames = len(latencies)
+        avg_latency = np.mean(latencies)
+        min_latency = np.min(latencies)
+        max_latency = np.max(latencies)
+        range_latency = max_latency - min_latency
+        median_latency = np.median(latencies)
+        mode_latency = stats.mode(latencies, keepdims=True)[0][0]
+        std_dev_latency = np.std(latencies)
+
+        print(f"Total Frames Processed: {total_frames}")
+        print(f"Average Latency: {avg_latency:.2f} ms")
+        print(f"Min Latency: {min_latency:.2f} ms")
+        print(f"Max Latency: {max_latency:.2f} ms")
+        print(f"Latency Range: {range_latency:.2f} ms")
+        print(f"Median Latency: {median_latency:.2f} ms")
+        print(f"Mode Latency: {mode_latency:.2f} ms")
+        print(f"Standard Deviation: {std_dev_latency:.2f} ms")
+
+        barWidth = 0.2
+        # Plot Latency Histogram
+        latency_bins = np.arange(int(min(latencies)), int(max(latencies)) + barWidth, barWidth)  # +2 to include the last bin
+        latency_counts, _ = np.histogram(latencies, bins=latency_bins)
+
+        plt.figure(figsize=(10, 5))
+        plt.bar(latency_bins[:-1], latency_counts, width=barWidth, align='edge', color='blue', edgecolor='black')
+        plt.xlabel('Latency (ms)')
+        plt.ylabel('Number of Frames')
+        plt.title('handRecognition.py Frame Processing Latency Distribution')
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()
 
 if __name__ == "__main__":
     main()

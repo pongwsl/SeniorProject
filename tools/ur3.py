@@ -117,7 +117,17 @@ class UR3:
             'maxJerk': jerk,            
         }
         self.sim.moveToPose(param)
-
+        # self.sim.moveToPose_async(param)  # ✅ non-blocking
+    
+    def move_pose_nonblocking(self, pose, ref_to_world=False):
+        """Immediately sets the target dummy pose for IK to follow."""
+        if ref_to_world:
+            pose_to_world = pose
+        else:
+            pose_to_world = self.sim.multiplyPoses(self.sim.getObjectPose(self.baseh), pose)
+        
+        # Set position
+        self.sim.setObjectPose(self.effh, self.baseh, pose_to_world)
 
     def move_joint(self, q, vel=None,accel=None,jerk=None):
 

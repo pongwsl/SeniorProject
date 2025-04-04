@@ -2,15 +2,13 @@
 # created by pongwsl on dec 20, 2024
 # This is only a playground, not save something to be permanent here.
 
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient
+import time
 
-client = RemoteAPIClient()
-sim = client.require('sim')
+start = time.time()
+for i in range(100000):
+    a = time.time()
+end = time.time()
 
-sim.setStepping(True)
-
-sim.startSimulation()
-while (t := sim.getSimulationTime()) < 3:
-    print(f'Simulation time: {t:.2f} [s]')
-    sim.step()
-sim.stopSimulation()
+# print(f"Elapsed time: {end - start} seconds")
+print(start)
+print(end)
