@@ -101,22 +101,15 @@ def handControl():
                 # Use Index MCP (landmark 5) and Pinky MCP (landmark 17) for roll calculation
                 indexMcp = handLandmarks[0].landmark[5]
                 pinkyMcp = handLandmarks[0].landmark[17]
-                if indexMcp.x >= pinkyMcp.x and indexMcp.y >= pinkyMcp.y:
-                    rollAngle = math.degrees(math.atan((indexMcp.y - pinkyMcp.y) / (indexMcp.x - pinkyMcp.x)))
-                elif indexMcp.x < pinkyMcp.x and indexMcp.y >= pinkyMcp.y:
-                    rollAngle = math.degrees(math.atan((indexMcp.y - pinkyMcp.y) / (indexMcp.x - pinkyMcp.x))) + 180
-                elif indexMcp.x < pinkyMcp.x and indexMcp.y < pinkyMcp.y:
-                    rollAngle = math.degrees(math.atan((indexMcp.y - pinkyMcp.y) / (indexMcp.x - pinkyMcp.x))) + 180
-                else:
-                    rollAngle = math.degrees(math.atan((indexMcp.y - pinkyMcp.y) / (indexMcp.x - pinkyMcp.x))) + 360
+                rollAngle = math.degrees(math.atan2(indexMcp.y - pinkyMcp.y, indexMcp.x - pinkyMcp.x))
 
                 # Calculate pitch and yaw using Index Tip (landmark 8) and Index MCP (landmark 5)
                 xLength85 = indexTip.x - indexMcp.x
                 yLength85 = indexTip.y - indexMcp.y
                 zLength85 = indexTip.z - indexMcp.z
                 xyzLength85 = math.sqrt(xLength85**2 + yLength85**2 + zLength85**2)
-                pitchAngle = math.degrees(math.asin(yLength85/xyzLength85))
-                yawAngle = math.degrees(math.asin(xLength85/xyzLength85))
+                pitchAngle = math.degrees(math.atan2(yLength85, math.sqrt(xLength85**2 + zLength85**2)))
+                yawAngle = math.degrees(math.atan2(xLength85, zLength85))
 
                 global prevAngles
                 currentAngles = (rollAngle, pitchAngle, yawAngle)

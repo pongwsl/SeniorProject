@@ -32,6 +32,7 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
     """
     # Initial position
     x, z, y = 0.5, 0.0, 0.9
+    roll, pitch, yaw = 0.0, 0.0, 0.0
 
     # Hand control generator
     controlGen = handControl()
@@ -39,7 +40,7 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
     # Smoothing setup
     alpha = 0.5  # 0.1-0.9, lower = smoother but more delayed
     smoothed_dx, smoothed_dy, smoothed_dz = 0.0, 0.0, 0.0
-    smoothed_dRoll, smoothed_dPitch, smoothed_dYaw = 0.0, 0.0, 0.0
+    # smoothed_dRoll, smoothed_dPitch, smoothed_dYaw = 0.0, 0.0, 0.0
 
     # Filtering setup
     max_delta = 0.1  # Max acceptable delta per frame (tune as needed)
@@ -53,9 +54,9 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
         smoothed_dx = alpha * dx + (1 - alpha) * smoothed_dx
         smoothed_dy = alpha * dy + (1 - alpha) * smoothed_dy
         smoothed_dz = alpha * dz + (1 - alpha) * smoothed_dz
-        smoothed_dRoll = alpha * dRoll + (1 - alpha) * smoothed_dRoll
-        smoothed_dPitch = alpha * dPitch + (1 - alpha) * smoothed_dPitch
-        smoothed_dYaw = alpha * dYaw + (1 - alpha) * smoothed_dYaw
+        # smoothed_dRoll = alpha * dRoll + (1 - alpha) * smoothed_dRoll
+        # smoothed_dPitch = alpha * dPitch + (1 - alpha) * smoothed_dPitch
+        # smoothed_dYaw = alpha * dYaw + (1 - alpha) * smoothed_dYaw
 
         # Filter out abnormal jumps (before applying to position)
         if abs(smoothed_dx) > max_delta or abs(smoothed_dy) > max_delta or abs(smoothed_dz) > max_delta:
@@ -65,8 +66,11 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
         x += smoothed_dx
         y -= smoothed_dy
         z -= smoothed_dz
+        roll += dRoll
+        pitch += dPitch
+        yaw += dYaw
 
-        yield (x, z, y, smoothed_dRoll, smoothed_dPitch, smoothed_dYaw)  # Include orientation deltas
+        yield (x, z, y, roll, pitch, yaw)  # Include orientation deltas
 
 def main():
     """
@@ -75,6 +79,7 @@ def main():
     """
     positionGen = getPosition()
     latencies = []
+    arrow_obj = None
 
     # Set up the Matplotlib figure and 3D axes
     fig = plt.figure()
@@ -104,10 +109,11 @@ def main():
         Args:
             frame: Frame number (unused).
         """
+        nonlocal arrow_obj
         frame_start_time = time.time()  # Start time for this frame
 
         try:
-            x, y, z, dRoll, dPitch, dYaw = next(positionGen)
+            x, z, y, roll, pitch, yaw = next(positionGen)
         except StopIteration:
             # If the generator is exhausted, stop the animation
             ani.event_source.stop()
@@ -133,6 +139,14 @@ def main():
         ax.set_ylim(min(trajectory_y) - buffer, max(trajectory_y) + buffer)
         ax.set_zlim(min(trajectory_z) - buffer, max(trajectory_z) + buffer)
 
+        if arrow_obj is not None:
+            arrow_obj.remove()
+        arrow_length = 0.2
+        # Compute the pointing direction using pitch and yaw (converted from degrees to radians)
+        u = arrow_length * np.cos(np.radians(pitch)) * np.cos(np.radians(yaw))
+        v = arrow_length * np.cos(np.radians(pitch)) * np.sin(np.radians(yaw))
+        w = arrow_length * np.sin(np.radians(pitch))
+        arrow_obj = ax.quiver(x, y, z, u, v, w, color='green', arrow_length_ratio=0.3)
         return point, trajLine
 
     # Create the animation
