@@ -1,10 +1,6 @@
 #
-# gestureRecognition.py
-# created by pongwsl on 17 Jul 2024, modified for Senior experiments in December 2024
-# - This code is designed to use webcam camera and MediaPipe to recognize hand gesture.
-# - This code is designed to use in 'mainHandCenterize.py'
-# Use Python 3.12 to run OpenCV 4.10
-# use venv
+# sandbox.py
+# only for testing.
 #
 
 # --- FUNCTION ---

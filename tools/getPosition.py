@@ -22,35 +22,51 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "tools"
 from .handControl import handControl
 
-def getPosition() -> Generator[Tuple[float, float, float], None, None]:
+def getPosition() -> Generator[Tuple[float, float, float, float, float, float], None, None]:
     """
-    Controls the position of an object based on hand movement deltas.
-
-    Initializes the object's position at (0, 0, 0) and updates it based on the deltas
-    (dx, dy, dz) received from the handControl generator.
-
+    Tracks the object position using smoothed and filtered hand movement deltas.
+    Filters out abnormal jumps and applies exponential smoothing.
+    
     Yields:
-        Tuple[float, float, float]: The updated (x, y, z) position of the object.
+        Tuple[float, float, float, float, float, float]: Smoothed and valid (x, z, y, dRoll, dPitch, dYaw) values for real-world use.
     """
-    # Initialize the starting position
-    # x, y, z = -0.4, -0.1, 0.5
+    # Initial position
     x, z, y = 0.5, 0.0, 0.9
 
-    # Initialize the handControl generator
+    # Hand control generator
     controlGen = handControl()
 
-    for dx, dy, dz in controlGen:
+    # Smoothing setup
+    alpha = 0.5  # 0.1-0.9, lower = smoother but more delayed
+    smoothed_dx, smoothed_dy, smoothed_dz = 0.0, 0.0, 0.0
+    smoothed_dRoll, smoothed_dPitch, smoothed_dYaw = 0.0, 0.0, 0.0
 
-        # Update the position based on the deltas
-        x += dx
-        y -= dy
-        z -= dz
-        # x += dx
-        # y -= dy
-        # z -= dz*0.1
+    # Filtering setup
+    max_delta = 0.1  # Max acceptable delta per frame (tune as needed)
 
-        yield (x, z, y)
-        # yield (x, y, z)
+    for dx, dy, dz, dRoll, dPitch, dYaw in controlGen:
+        # Skip if data is invalid
+        if None in (dx, dy, dz, dRoll, dPitch, dYaw) or any(np.isnan(v) for v in (dx, dy, dz, dRoll, dPitch, dYaw)):
+            continue
+
+        # Exponential smoothing
+        smoothed_dx = alpha * dx + (1 - alpha) * smoothed_dx
+        smoothed_dy = alpha * dy + (1 - alpha) * smoothed_dy
+        smoothed_dz = alpha * dz + (1 - alpha) * smoothed_dz
+        smoothed_dRoll = alpha * dRoll + (1 - alpha) * smoothed_dRoll
+        smoothed_dPitch = alpha * dPitch + (1 - alpha) * smoothed_dPitch
+        smoothed_dYaw = alpha * dYaw + (1 - alpha) * smoothed_dYaw
+
+        # Filter out abnormal jumps (before applying to position)
+        if abs(smoothed_dx) > max_delta or abs(smoothed_dy) > max_delta or abs(smoothed_dz) > max_delta:
+            continue  # Skip this frame
+
+        # Update position with smoothed values
+        x += smoothed_dx
+        y -= smoothed_dy
+        z -= smoothed_dz
+
+        yield (x, z, y, smoothed_dRoll, smoothed_dPitch, smoothed_dYaw)  # Include orientation deltas
 
 def main():
     """
@@ -91,7 +107,7 @@ def main():
         frame_start_time = time.time()  # Start time for this frame
 
         try:
-            x, y, z = next(positionGen)
+            x, y, z, dRoll, dPitch, dYaw = next(positionGen)
         except StopIteration:
             # If the generator is exhausted, stop the animation
             ani.event_source.stop()
