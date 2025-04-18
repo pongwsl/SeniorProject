@@ -14,7 +14,7 @@ from tools.getPosition import getPosition
 
 input("""
 Before starting, open CoppeliaSim:
-  File → Open scene → coppeliasim/ur3.ttt
+  File → Open scene → coppeliasim/ur3withSpray.ttt
 Press ENTER to continue...
 """)
 
@@ -25,8 +25,35 @@ ur3 = UR3(sim, "/UR3")
 ur3.reset_target()
 sim.startSimulation()
 
-# Define the quaternion (orientation) values
-quart = [0.5, 0.5, 0.5, 0.5]
+# --- Spray control signals ---
+spray_signal = 'sprayOn'
+def set_spray(on: bool):
+    """
+    Turn the spray on or off by signaling CoppeliaSim.
+    """
+    # 1 for on, 0 for off
+    sim.setIntegerSignal(spray_signal, 1 if on else 0)
+
+import math
+
+def euler_to_quaternion(roll, pitch, yaw):
+    """
+    Convert Euler angles (roll, pitch, yaw) in radians to a quaternion.
+    Returns:
+        [x, y, z, w]
+    """
+    cy = math.cos(yaw * 0.5)
+    sy = math.sin(yaw * 0.5)
+    cp = math.cos(pitch * 0.5)
+    sp = math.sin(pitch * 0.5)
+    cr = math.cos(roll * 0.5)
+    sr = math.sin(roll * 0.5)
+
+    w = cr * cp * cy + sr * sp * sy
+    x = sr * cp * cy - cr * sp * sy
+    y = cr * sp * cy + sr * cp * sy
+    z = cr * cp * sy - sr * sp * cy
+    return [x, y, z, w]
 
 # Get the position generator (handControl() internally displays the annotated frame)
 pos_gen = getPosition()
@@ -41,12 +68,28 @@ while True:
         print("Hand control exited. Exiting simulation.")
         break
 
-    # Combine the position with the quaternion
-    pose_to_move = list(pos) + quart
+    # Unpack hand position and orientation: x, y, z, roll, pitch, yaw
+    x, y, z, roll, pitch, yaw = pos
+
+    # Convert Euler angles from degrees to radians (if getPosition returns degrees)
+    roll_rad = math.radians(roll)
+    pitch_rad = math.radians(pitch)
+    yaw_rad = math.radians(yaw)
+
+    # Convert Euler angles to quaternion
+    quat = euler_to_quaternion(roll_rad, pitch_rad, yaw_rad)
+
+    # Build the pose to move: position and orientation from the hand
+    pose_to_move = [x, y, z] + quat
 
     # Command the UR3 robot to move to the new pose
     ur3.move_pose_nonblocking(pose_to_move)
     print("Moving to pose:", pose_to_move)
+    # Example: spray when close to target height
+    if z < 0.2:
+        set_spray(True)
+    else:
+        set_spray(False)
 
     latency = (time.time() - start_time) * 1000  # Convert to milliseconds
     latencies.append(round(latency))

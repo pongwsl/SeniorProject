@@ -70,6 +70,11 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
         pitch += dPitch
         yaw += dYaw
 
+        # Normalize angles to the range [0, 360)
+        roll = roll % 360
+        pitch = pitch % 360
+        yaw = yaw % 360
+
         yield (x, z, y, roll, pitch, yaw)  # Include orientation deltas
 
 def main():
@@ -102,6 +107,9 @@ def main():
     # Use a solid line for the trajectory
     trajLine, = ax.plot([], [], [], linestyle='-', color='blue')
 
+    # Create a text object to display current values
+    text_info = ax.text2D(0.05, 0.95, "", transform=ax.transAxes)
+
     def update_plot(frame):
         """
         Update function for Matplotlib animation.
@@ -109,7 +117,7 @@ def main():
         Args:
             frame: Frame number (unused).
         """
-        nonlocal arrow_obj
+        nonlocal arrow_obj, text_info
         frame_start_time = time.time()  # Start time for this frame
 
         try:
@@ -143,10 +151,16 @@ def main():
             arrow_obj.remove()
         arrow_length = 0.2
         # Compute the pointing direction using pitch and yaw (converted from degrees to radians)
-        u = arrow_length * np.cos(np.radians(pitch)) * np.cos(np.radians(yaw))
-        v = arrow_length * np.cos(np.radians(pitch)) * np.sin(np.radians(yaw))
+        # Invert yaw to fix the direction: when your finger yaw left, the arrow will yaw left
+        effective_yaw = -yaw
+        u = arrow_length * np.cos(np.radians(pitch)) * np.cos(np.radians(effective_yaw))
+        v = arrow_length * np.cos(np.radians(pitch)) * np.sin(np.radians(effective_yaw))
         w = arrow_length * np.sin(np.radians(pitch))
         arrow_obj = ax.quiver(x, y, z, u, v, w, color='green', arrow_length_ratio=0.3)
+
+        # Update the displayed text with the current position and orientation
+        text_info.set_text(f"x: {x:.2f}, y: {y:.2f}, z: {z:.2f}\nroll: {roll:.2f}, pitch: {pitch:.2f}, yaw: {yaw:.2f}")
+
         return point, trajLine
 
     # Create the animation
