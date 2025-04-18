@@ -12,6 +12,9 @@ import time
 from typing import Generator, Tuple
 import numpy as np
 from scipy import stats
+
+# Movement scaling factor (0 < scale ≤ 1) to slow position updates
+movement_scale = 0.5  # e.g., half speed
 # from tools.handControl import handControl
 
 if __name__ == "__main__" and __package__ is None:
@@ -22,13 +25,14 @@ if __name__ == "__main__" and __package__ is None:
     __package__ = "tools"
 from .handControl import handControl
 
-def getPosition() -> Generator[Tuple[float, float, float, float, float, float], None, None]:
+def getPosition() -> Generator[Tuple[float, float, float, float, float, float, bool], None, None]:
     """
     Tracks the object position using smoothed and filtered hand movement deltas.
     Filters out abnormal jumps and applies exponential smoothing.
     
     Yields:
-        Tuple[float, float, float, float, float, float]: Smoothed and valid (x, z, y, dRoll, dPitch, dYaw) values for real-world use.
+        Tuple[float, float, float, float, float, float, bool]:
+            Smoothed and valid (x, z, y, roll, pitch, yaw, is_pinch) values for real-world use.
     """
     # Initial position
     x, z, y = 0.5, 0.0, 0.9
@@ -45,7 +49,7 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
     # Filtering setup
     max_delta = 0.1  # Max acceptable delta per frame (tune as needed)
 
-    for dx, dy, dz, dRoll, dPitch, dYaw in controlGen:
+    for dx, dy, dz, dRoll, dPitch, dYaw, is_pinch in controlGen:
         # Skip if data is invalid
         if None in (dx, dy, dz, dRoll, dPitch, dYaw) or any(np.isnan(v) for v in (dx, dy, dz, dRoll, dPitch, dYaw)):
             continue
@@ -62,10 +66,10 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
         if abs(smoothed_dx) > max_delta or abs(smoothed_dy) > max_delta or abs(smoothed_dz) > max_delta:
             continue  # Skip this frame
 
-        # Update position with smoothed values
-        x += smoothed_dx
-        y -= smoothed_dy
-        z -= smoothed_dz
+        # Update position with smoothed values (scaled)
+        x += smoothed_dx * movement_scale
+        y -= smoothed_dy * movement_scale
+        z -= smoothed_dz * movement_scale
         roll += dRoll
         pitch += dPitch
         yaw += dYaw
@@ -75,7 +79,7 @@ def getPosition() -> Generator[Tuple[float, float, float, float, float, float], 
         pitch = pitch % 360
         yaw = yaw % 360
 
-        yield (x, z, y, roll, pitch, yaw)  # Include orientation deltas
+        yield (x, z, y, roll, pitch, yaw, is_pinch)  # Include orientation deltas and pinch state
 
 def main():
     """
@@ -89,7 +93,6 @@ def main():
     # Set up the Matplotlib figure and 3D axes
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.set_title('Object Position Tracking')
     ax.set_xlabel('X Position')
     ax.set_ylabel('Y Position')
     ax.set_zlabel('Z Position')
@@ -121,7 +124,7 @@ def main():
         frame_start_time = time.time()  # Start time for this frame
 
         try:
-            x, z, y, roll, pitch, yaw = next(positionGen)
+            x, z, y, roll, pitch, yaw, is_pinch = next(positionGen)
         except StopIteration:
             # If the generator is exhausted, stop the animation
             ani.event_source.stop()
@@ -159,7 +162,11 @@ def main():
         arrow_obj = ax.quiver(x, y, z, u, v, w, color='green', arrow_length_ratio=0.3)
 
         # Update the displayed text with the current position and orientation
-        text_info.set_text(f"x: {x:.2f}, y: {y:.2f}, z: {z:.2f}\nroll: {roll:.2f}, pitch: {pitch:.2f}, yaw: {yaw:.2f}")
+        text_info.set_text(
+            f"x: {x:.2f}, y: {y:.2f}, z: {z:.2f}\n"
+            f"roll: {roll:.2f}, pitch: {pitch:.2f}, yaw: {yaw:.2f}\n"
+            f"Spray: {'ON' if is_pinch else 'OFF'}"
+        )
 
         return point, trajLine
 

@@ -10,6 +10,9 @@ import cv2
 import time
 import math
 from typing import Tuple, Optional
+from .pointerData import link
+# Pinch detection threshold (normalized coordinates)
+pinch_threshold = 0.05
 
 prevAngles = None
 
@@ -32,7 +35,8 @@ def handControl():
               indicating hand moving closer or farther from the camera.
 
     Yields:
-        Tuple[float, float, float]: (dx, dy, dz)
+        Tuple[float, float, float, float, float, float, bool]:
+            (dx, dy, dz, dRoll, dPitch, dYaw, is_pinch)
     """
     # Initialize VideoStream
     videoStream = VideoStream(0)
@@ -120,9 +124,14 @@ def handControl():
                     dPitch = pitchAngle - prevAngles[1]
                     dYaw = yawAngle - prevAngles[2]
                 prevAngles = currentAngles
+                # Pinch detection using same method as pointerData
+                dx_tip = link(handLandmarks[0], 4, 8, 'x')
+                dy_tip = link(handLandmarks[0], 4, 8, 'y')
+                is_pinch = math.hypot(dx_tip, dy_tip) < pinch_threshold
             else:
                 dx, dy, dz = 0.0, 0.0, 0.0
                 dRoll, dPitch, dYaw = 0.0, 0.0, 0.0
+                is_pinch = False
 
             # Overlay the movement values on the annotated frame.
             text1 = f"dx: {dx:.4f}, dy: {dy:.4f}, dz: {dz:.4f}"
@@ -138,7 +147,7 @@ def handControl():
                 print("Key pressed. Exiting...")
                 break
 
-            yield (dx, dy, dz, dRoll, dPitch, dYaw)
+            yield (dx, dy, dz, dRoll, dPitch, dYaw, is_pinch)
 
     except KeyboardInterrupt:
         print("Keyboard interrupt received. Exiting...")

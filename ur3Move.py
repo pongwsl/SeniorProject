@@ -68,8 +68,8 @@ while True:
         print("Hand control exited. Exiting simulation.")
         break
 
-    # Unpack hand position and orientation: x, y, z, roll, pitch, yaw
-    x, y, z, roll, pitch, yaw = pos
+    # Unpack hand position, orientation, and pinch state: x, y, z, roll, pitch, yaw, is_pinch
+    x, y, z, roll, pitch, yaw, is_pinch = pos
 
     # Convert Euler angles from degrees to radians (if getPosition returns degrees)
     roll_rad = math.radians(roll)
@@ -84,12 +84,12 @@ while True:
 
     # Command the UR3 robot to move to the new pose
     ur3.move_pose_nonblocking(pose_to_move)
-    print("Moving to pose:", pose_to_move)
-    # Example: spray when close to target height
-    if z < 0.2:
-        set_spray(True)
-    else:
-        set_spray(False)
+    # Format the pose values to three decimals
+    formatted_pose = [round(v, 3) for v in pose_to_move]
+    nozzle_state = 'ON' if is_pinch else 'OFF'
+    print(f"Moving to pose: {formatted_pose} >> Nozzle: {nozzle_state}")
+    # Control spray based on pinch state
+    set_spray(is_pinch)
 
     latency = (time.time() - start_time) * 1000  # Convert to milliseconds
     latencies.append(round(latency))

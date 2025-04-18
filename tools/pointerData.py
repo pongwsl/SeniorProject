@@ -1,17 +1,18 @@
-# pointerData.py
+# tools/pointerData.py
 # created by pongwsl on 23 dec 2024
-# last updated 24 dec 2024
-# based on test3.py, to globalize this function.
-# This code tested on python 3.9.12 on venvMetal.
-# To select Python Interpreter in VSCode: press [[cmd + shift + P]], type 'Python: Select Interpreter'
-# use "/Users/wasinlapthanaphat/Desktop/helloWorld/venvMetal/bin/Python"
-# use virtual enviroment "/Users/wasinlapthanaphat/Desktop/helloWorld/venvMetal"
-# source /Users/wasinlapthanaphat/Desktop/helloWorld/venv-metal/bin/activate
+# last updated 18 apr 2025
+# use getPosition.py
+
+# When running this module directly, adjust sys.path to ensure the parent folder is in the path.
+if __name__ == "__main__" and __package__ is None:
+    import sys, os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    __package__ = "tools"
+from .handRecognition import HandRecognition, VideoStream
 
 import cv2
 import mediapipe as mp
 import time
-import threading
 import math
 
 # Configuration Parameters
@@ -22,33 +23,6 @@ maxNumHands = 1
 minDetectionConfidence = 0.8  # higher is faster (GPT's opinion)
 minTrackingConfidence = 0.8
 modelComplexity = 0  # 0 for lightweight, 1 for full
-
-class VideoStream:
-    def __init__(self, src = 0):
-        self.capture = cv2.VideoCapture(src)
-        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, frameWidth)
-        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, frameHeight)
-        self.ret, self.frame = self.capture.read()
-        self.running = True
-        self.lock = threading.Lock()
-        self.thread = threading.Thread(target = self.update, daemon = True)
-        self.thread.start()
-
-    def update(self):
-        while self.running:
-            ret, frame = self.capture.read()
-            with self.lock:
-                self.ret = ret
-                self.frame = frame
-
-    def read(self):
-        with self.lock:
-            return self.ret, self.frame.copy() if self.ret else (False, None)
-
-    def stop(self):
-        self.running = False
-        self.thread.join()
-        self.capture.release()
 
 def link(lm, n, m, a):
     return getattr(lm.landmark[n], a) - getattr(lm.landmark[m], a)
